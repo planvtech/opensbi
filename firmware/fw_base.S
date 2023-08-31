@@ -181,7 +181,7 @@ _wait_relocate_copy_done:
 	sub	t3, t3, t0
 	add	t3, t3, t1
 1:
-	/* waitting for relocate copy done (_boot_status == 1) */
+	/* waiting for relocate copy done (_boot_status == 1) */
 	li	t4, BOOT_STATUS_RELOCATE_DONE
 	REG_L	t5, 0(t2)
 	/* Reduce the bus traffic so that boot hart may proceed faster */
@@ -398,12 +398,15 @@ _fdt_reloc_again:
 	add	t1, t1, __SIZEOF_POINTER__
 	blt	t1, t2, _fdt_reloc_again
 _fdt_reloc_done:
-
+	fence	rw, rw
 	/* mark boot hart done */
 	li	t0, BOOT_STATUS_BOOT_HART_DONE
 	lla	t1, _boot_status
 	REG_S	t0, 0(t1)
 	fence	rw, rw
+
+/*	REG_S	t0, 0(t1)
+	fence	rw, rw */
 	j	_start_warm
 
 	/* waiting for boot hart to be done (_boot_status == 2) */
