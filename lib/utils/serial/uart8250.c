@@ -84,10 +84,31 @@ static int uart8250_getc(void)
 	return -1;
 }
 
+static void altera_uart_putc(char ch)
+{
+	while ((get_reg(UART_THR_OFFSET+6) ) < 8)
+		;
+
+	set_reg(UART_THR_OFFSET, ch);
+}
+
+static int altera_uart_getc(void)
+{
+	if (get_reg(UART_THR_OFFSET+1) & 0x8)
+		return get_reg(UART_RBR_OFFSET);
+	return -1;
+}
+
 static struct sbi_console_device uart8250_console = {
 	.name = "uart8250",
 	.console_putc = uart8250_putc,
 	.console_getc = uart8250_getc
+};
+
+static struct sbi_console_device altera_uart_console = {
+	.name = "altera_uart",
+	.console_putc = altera_uart_putc,
+	.console_getc = altera_uart_getc
 };
 
 int uart8250_init(unsigned long base, u32 in_freq, u32 baudrate, u32 reg_shift,
@@ -129,6 +150,21 @@ int uart8250_init(unsigned long base, u32 in_freq, u32 baudrate, u32 reg_shift,
 	set_reg(UART_SCR_OFFSET, 0x00);
 
 	sbi_console_set_device(&uart8250_console);
+
+	return 0;
+}
+
+int altera_uart_init(unsigned long base, u32 in_freq, u32 baudrate, u32 reg_shift,
+		  u32 reg_width)
+{
+
+	uart8250_base      = (volatile void *)base;
+	uart8250_reg_shift = reg_shift;
+	uart8250_reg_width = reg_width;
+	uart8250_in_freq   = in_freq;
+	uart8250_baudrate  = baudrate;
+
+	sbi_console_set_device(&altera_uart_console);
 
 	return 0;
 }
