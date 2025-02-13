@@ -86,7 +86,7 @@ static int uart8250_getc(void)
 
 static void altera_uart_putc(char ch)
 {
-	while ((get_reg(UART_THR_OFFSET+6) ) < 8)
+	while (((get_reg(UART_THR_OFFSET+7) << 8) + get_reg(UART_THR_OFFSET+6) ) < 8)
 		;
 
 	set_reg(UART_THR_OFFSET, ch);
@@ -94,7 +94,7 @@ static void altera_uart_putc(char ch)
 
 static int altera_uart_getc(void)
 {
-	if (get_reg(UART_THR_OFFSET+1) & 0x8)
+	if (get_reg(UART_RBR_OFFSET) !=0)
 		return get_reg(UART_RBR_OFFSET);
 	return -1;
 }
